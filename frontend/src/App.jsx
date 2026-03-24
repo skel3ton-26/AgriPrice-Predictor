@@ -22,9 +22,14 @@ const S = {
 
 const COMMODITIES = ['Onion','Tomato','Potato','Wheat','Rice','Maize']
 const MARKETS     = ['Pune','Nashik','Delhi','Bangalore','Hyderabad','Chennai','Kolkata','Bhopal']
-
 const SIGNAL_COLOR = { BUY: S.green, SELL: S.red, HOLD: S.amber }
 const SIGNAL_BG    = { BUY: '#052e16', SELL: '#1f0404', HOLD: '#1c1000' }
+
+/* ─── Demo users (hardcoded) ─────────────────────────────────────────── */
+const USERS = [
+  { username: 'admin',  password: 'admin123' },
+  { username: 'demo',   password: 'demo123'  },
+]
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 const fmt = (v) => `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
@@ -36,19 +41,14 @@ const api = async (path) => {
 }
 
 /* ─── Sub-components ─────────────────────────────────────────────────── */
-
 function Select({ label, value, onChange, options }) {
   return (
     <label style={{ display:'flex', flexDirection:'column', gap:4, fontSize:12, color:S.muted }}>
       {label}
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          background: S.card, color: S.text, border: `1px solid ${S.border}`,
-          borderRadius: 8, padding: '6px 10px', fontSize: 13, cursor:'pointer',
-        }}
-      >
+      <select value={value} onChange={e => onChange(e.target.value)} style={{
+        background:S.card, color:S.text, border:`1px solid ${S.border}`,
+        borderRadius:8, padding:'6px 10px', fontSize:13, cursor:'pointer',
+      }}>
         {options.map(o => <option key={o}>{o}</option>)}
       </select>
     </label>
@@ -57,12 +57,8 @@ function Select({ label, value, onChange, options }) {
 
 function Spinner() {
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding: 60, color: S.muted, flexDirection:'column', gap:12 }}>
-      <div style={{
-        width:32, height:32, border:`3px solid ${S.border}`,
-        borderTopColor: S.blue, borderRadius:'50%',
-        animation:'spin 0.8s linear infinite',
-      }}/>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:60, color:S.muted, flexDirection:'column', gap:12 }}>
+      <div style={{ width:32, height:32, border:`3px solid ${S.border}`, borderTopColor:S.blue, borderRadius:'50%', animation:'spin 0.8s linear infinite' }}/>
       <span style={{fontSize:13}}>Training models & generating forecast…</span>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
@@ -73,19 +69,109 @@ function SignalBadge({ signal }) {
   if (!signal) return null
   return (
     <span style={{
-      background: SIGNAL_BG[signal],
-      color: SIGNAL_COLOR[signal],
-      border: `1px solid ${SIGNAL_COLOR[signal]}44`,
-      borderRadius: 6, padding: '2px 10px', fontSize: 12, fontWeight: 600,
+      background:SIGNAL_BG[signal], color:SIGNAL_COLOR[signal],
+      border:`1px solid ${SIGNAL_COLOR[signal]}44`,
+      borderRadius:6, padding:'2px 10px', fontSize:12, fontWeight:600,
     }}>{signal}</span>
   )
 }
 
 function StatCard({ label, value }) {
   return (
-    <div style={{ background: S.card, border:`1px solid ${S.border}`, borderRadius:10, padding:'12px 16px' }}>
+    <div style={{ background:S.card, border:`1px solid ${S.border}`, borderRadius:10, padding:'12px 16px' }}>
       <div style={{ fontSize:11, color:S.muted, marginBottom:4 }}>{label}</div>
       <div style={{ fontSize:18, fontWeight:600, color:S.text }}>{value}</div>
+    </div>
+  )
+}
+
+/* ─── Login Page ─────────────────────────────────────────────────────── */
+function LoginPage({ onLogin }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error,    setError]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+
+  const handleLogin = () => {
+    setError('')
+    setLoading(true)
+    setTimeout(() => {
+      const user = USERS.find(u => u.username === username && u.password === password)
+      if (user) {
+        onLogin(username)
+      } else {
+        setError('Invalid username or password')
+      }
+      setLoading(false)
+    }, 600)
+  }
+
+  const inputStyle = {
+    background:S.card, color:S.text, border:`1px solid ${S.border}`,
+    borderRadius:8, padding:'10px 14px', fontSize:14, width:'100%',
+    outline:'none', boxSizing:'border-box',
+  }
+
+  return (
+    <div style={{
+      minHeight:'100vh', background:S.bg, display:'flex',
+      alignItems:'center', justifyContent:'center', fontFamily:"'DM Sans',sans-serif",
+    }}>
+      <div style={{
+        background:S.surface, border:`1px solid ${S.border}`,
+        borderRadius:16, padding:'40px 36px', width:360,
+        display:'flex', flexDirection:'column', gap:20,
+      }}>
+        {/* Logo */}
+        <div style={{ textAlign:'center' }}>
+          <div style={{ fontSize:40, marginBottom:8 }}>🌾</div>
+          <div style={{ fontSize:20, fontWeight:700, color:S.text }}>AgriPrice Predictor</div>
+          <div style={{ fontSize:12, color:S.muted, marginTop:4 }}>Sign in to continue</div>
+        </div>
+
+        {/* Fields */}
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            <label style={{ fontSize:12, color:S.muted }}>Username</label>
+            <input
+              type="text" placeholder="Enter username" value={username}
+              onChange={e => setUsername(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            <label style={{ fontSize:12, color:S.muted }}>Password</label>
+            <input
+              type="password" placeholder="Enter password" value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              style={inputStyle}
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ background:'#1f0404', border:`1px solid ${S.red}44`, borderRadius:8, padding:'8px 12px', fontSize:12, color:S.red }}>
+            {error}
+          </div>
+        )}
+
+        <button onClick={handleLogin} disabled={loading} style={{
+          background:S.blue, color:'#fff', border:'none', borderRadius:8,
+          padding:'11px', fontSize:14, fontWeight:600, cursor:'pointer',
+          opacity: loading ? 0.7 : 1,
+        }}>
+          {loading ? 'Signing in…' : 'Sign In'}
+        </button>
+
+        {/* Hint */}
+        <div style={{ background:S.card, border:`1px solid ${S.border}`, borderRadius:8, padding:'10px 14px', fontSize:11, color:S.muted }}>
+          <div style={{ marginBottom:4, fontWeight:600 }}>Demo credentials:</div>
+          <div>Username: <span style={{color:S.text}}>admin</span> &nbsp; Password: <span style={{color:S.text}}>admin123</span></div>
+          <div>Username: <span style={{color:S.text}}>demo</span> &nbsp; Password: <span style={{color:S.text}}>demo123</span></div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -110,34 +196,23 @@ function ForecastTab() {
 
   const chartData = data ? data.dates.map((date, i) => ({
     date: date.slice(5),
-    ensemble: data.ensemble[i],
-    arima:    data.arima[i],
-    xgb:      data.xgb[i],
-    ci_lower: data.ci_lower[i],
-    ci_upper: data.ci_upper[i],
+    ensemble: data.ensemble[i], arima: data.arima[i], xgb: data.xgb[i],
+    ci_lower: data.ci_lower[i], ci_upper: data.ci_upper[i],
   })) : []
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
-      {/* Controls */}
       <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'flex-end' }}>
         <Select label="Commodity" value={commodity} onChange={setCommodity} options={COMMODITIES} />
         <Select label="Market"    value={market}    onChange={setMarket}    options={MARKETS} />
         <label style={{ display:'flex', flexDirection:'column', gap:4, fontSize:12, color:S.muted }}>
           Horizon (days)
-          <input
-            type="number" min={1} max={60} value={horizon}
+          <input type="number" min={1} max={60} value={horizon}
             onChange={e => setHorizon(Number(e.target.value))}
-            style={{
-              background:S.card, color:S.text, border:`1px solid ${S.border}`,
-              borderRadius:8, padding:'6px 10px', fontSize:13, width:100,
-            }}
+            style={{ background:S.card, color:S.text, border:`1px solid ${S.border}`, borderRadius:8, padding:'6px 10px', fontSize:13, width:100 }}
           />
         </label>
-        <button onClick={run} style={{
-          background: S.blue, color:'#fff', border:'none', borderRadius:8,
-          padding:'8px 20px', fontSize:13, fontWeight:600, cursor:'pointer',
-        }}>
+        <button onClick={run} style={{ background:S.blue, color:'#fff', border:'none', borderRadius:8, padding:'8px 20px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
           Run Forecast
         </button>
       </div>
@@ -147,21 +222,14 @@ function ForecastTab() {
 
       {data && !loading && (
         <>
-          {/* Signal banner */}
-          <div style={{
-            background: SIGNAL_BG[data.signal],
-            border: `1px solid ${SIGNAL_COLOR[data.signal]}44`,
-            borderRadius:10, padding:'14px 20px',
-            display:'flex', alignItems:'center', gap:12,
-          }}>
+          <div style={{ background:SIGNAL_BG[data.signal], border:`1px solid ${SIGNAL_COLOR[data.signal]}44`, borderRadius:10, padding:'14px 20px', display:'flex', alignItems:'center', gap:12 }}>
             <SignalBadge signal={data.signal} />
-            <span style={{ color: S.text, fontSize:14 }}>{data.signal_reason}</span>
+            <span style={{ color:S.text, fontSize:14 }}>{data.signal_reason}</span>
             <span style={{ marginLeft:'auto', color:S.muted, fontSize:12 }}>
               Current: <strong style={{color:S.text}}>{fmt(data.current_price)}/q</strong>
             </span>
           </div>
 
-          {/* Stat cards */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
             <StatCard label="Current price" value={fmt(data.current_price)} />
             <StatCard label="Forecast end"  value={fmt(data.ensemble[data.ensemble.length-1])} />
@@ -169,7 +237,6 @@ function ForecastTab() {
             <StatCard label="Horizon"       value={`${data.horizon_days} days`} />
           </div>
 
-          {/* Chart */}
           <div style={{ background:S.card, border:`1px solid ${S.border}`, borderRadius:12, padding:'20px 16px' }}>
             <div style={{ fontSize:13, color:S.muted, marginBottom:12 }}>Price forecast with confidence interval</div>
             <ResponsiveContainer width="100%" height={280}>
@@ -183,30 +250,24 @@ function ForecastTab() {
                 <CartesianGrid strokeDasharray="3 3" stroke={S.border} />
                 <XAxis dataKey="date" tick={{fill:S.muted,fontSize:11}} />
                 <YAxis tickFormatter={v => `₹${(v/1000).toFixed(1)}k`} tick={{fill:S.muted,fontSize:11}} />
-                <Tooltip
-                  contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}}
-                  labelStyle={{color:S.muted}}
-                  formatter={(v,n) => [fmt(v), n]}
-                />
+                <Tooltip contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}} labelStyle={{color:S.muted}} formatter={(v,n) => [fmt(v),n]} />
                 <Legend wrapperStyle={{fontSize:12,color:S.muted}} />
                 <Area dataKey="ci_upper" stroke="none" fill="url(#ciGrad)" name="CI upper" legendType="none"/>
                 <Area dataKey="ci_lower" stroke="none" fill={S.bg} name="CI lower" legendType="none"/>
                 <Line dataKey="ensemble" stroke={S.blue}   dot={false} strokeWidth={2.5} name="Ensemble"/>
-                <Line dataKey="arima"    stroke={S.purple} dot={false} strokeWidth={1.5} strokeDasharray="4 2" name="ARIMA"/>
+                <Line dataKey="arima"    stroke={S.purple} dot={false} strokeWidth={1.5} strokeDasharray="4 2" name="ETS"/>
                 <Line dataKey="xgb"      stroke={S.green}  dot={false} strokeWidth={1.5} strokeDasharray="4 2" name="XGBoost"/>
-
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Day-by-day table */}
           <div style={{ background:S.card, border:`1px solid ${S.border}`, borderRadius:12, overflow:'hidden' }}>
             <div style={{ padding:'14px 20px', fontSize:13, color:S.muted, borderBottom:`1px solid ${S.border}` }}>Day-by-day forecast</div>
             <div style={{ overflowX:'auto' }}>
               <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
                 <thead>
                   <tr style={{ background:S.surface }}>
-                    {['Date','Ensemble','ARIMA','XGBoost','CI Low','CI High'].map(h => (
+                    {['Date','Ensemble','ETS','XGBoost','CI Low','CI High'].map(h => (
                       <th key={h} style={{ padding:'8px 14px', color:S.muted, fontWeight:500, textAlign:'left' }}>{h}</th>
                     ))}
                   </tr>
@@ -252,13 +313,11 @@ function HistoricalTab() {
     } finally { setLoading(false) }
   }, [commodity, market, days])
 
-  const lineData = prices ? prices.dates.map((d, i) => ({
-    date: d.slice(5), price: prices.prices[i],
-  })) : []
+  // Auto-load on mount
+  useEffect(() => { load() }, [])
 
-  const barData = stats ? Object.entries(stats.monthly_avg).map(([month, avg]) => ({
-    month, avg,
-  })) : []
+  const lineData = prices ? prices.dates.map((d, i) => ({ date: d.slice(5), price: prices.prices[i] })) : []
+  const barData  = stats  ? Object.entries(stats.monthly_avg).map(([month, avg]) => ({ month, avg })) : []
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
@@ -267,10 +326,9 @@ function HistoricalTab() {
         <Select label="Market"    value={market}    onChange={setMarket}    options={MARKETS} />
         <Select label="Period" value={`${days} days`} onChange={v => setDays(Number(v.split(' ')[0]))}
           options={['90 days','180 days','365 days','730 days']} />
-        <button onClick={load} style={{
-          background:S.blue, color:'#fff', border:'none', borderRadius:8,
-          padding:'8px 20px', fontSize:13, fontWeight:600, cursor:'pointer',
-        }}>Load</button>
+        <button onClick={load} style={{ background:S.blue, color:'#fff', border:'none', borderRadius:8, padding:'8px 20px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+          Load
+        </button>
       </div>
 
       {loading && <Spinner />}
@@ -299,10 +357,7 @@ function HistoricalTab() {
               <CartesianGrid strokeDasharray="3 3" stroke={S.border} />
               <XAxis dataKey="date" tick={{fill:S.muted,fontSize:10}} interval={Math.floor(lineData.length/6)} />
               <YAxis tickFormatter={v => `₹${(v/1000).toFixed(1)}k`} tick={{fill:S.muted,fontSize:11}} />
-              <Tooltip
-                contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}}
-                formatter={(v) => [fmt(v),'Price']}
-              />
+              <Tooltip contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}} formatter={(v) => [fmt(v),'Price']} />
               <Area dataKey="price" stroke={S.blue} fill="url(#priceGrad)" dot={false} strokeWidth={1.5} name="Price"/>
               <Brush dataKey="date" height={20} stroke={S.border} fill={S.surface} travellerWidth={6}/>
             </AreaChart>
@@ -318,10 +373,7 @@ function HistoricalTab() {
               <CartesianGrid strokeDasharray="3 3" stroke={S.border} />
               <XAxis dataKey="month" tick={{fill:S.muted,fontSize:10}} />
               <YAxis tickFormatter={v => `₹${(v/1000).toFixed(1)}k`} tick={{fill:S.muted,fontSize:11}} />
-              <Tooltip
-                contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}}
-                formatter={(v) => [fmt(v),'Avg price']}
-              />
+              <Tooltip contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}} formatter={(v) => [fmt(v),'Avg price']} />
               <Bar dataKey="avg" fill={S.purple} radius={[4,4,0,0]} name="Avg price"/>
             </BarChart>
           </ResponsiveContainer>
@@ -346,35 +398,26 @@ function CompareTab() {
     } finally { setLoading(false) }
   }, [market, horizon])
 
-  const barData = data ? data.commodities.map(c => ({
-    name: c.commodity,
-    trend: c.trend_pct,
-  })) : []
+  const barData = data ? data.commodities.map(c => ({ name: c.commodity, trend: c.trend_pct })) : []
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
       <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'flex-end' }}>
         <Select label="Market"  value={market}  onChange={setMarket}  options={MARKETS} />
-        <Select label="Horizon" value={`${horizon} days`}
-          onChange={v => setHorizon(Number(v.split(' ')[0]))}
+        <Select label="Horizon" value={`${horizon} days`} onChange={v => setHorizon(Number(v.split(' ')[0]))}
           options={['7 days','14 days','30 days','60 days']} />
-        <button onClick={run} style={{
-          background:S.blue, color:'#fff', border:'none', borderRadius:8,
-          padding:'8px 20px', fontSize:13, fontWeight:600, cursor:'pointer',
-        }}>Compare All</button>
+        <button onClick={run} style={{ background:S.blue, color:'#fff', border:'none', borderRadius:8, padding:'8px 20px', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+          Compare All
+        </button>
       </div>
 
       {loading && <Spinner />}
 
       {data && !loading && (
         <>
-          {/* Signal grid */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))', gap:12 }}>
             {data.commodities.map(c => (
-              <div key={c.commodity} style={{
-                background:S.card, border:`1px solid ${S.border}`,
-                borderRadius:12, padding:'16px',
-              }}>
+              <div key={c.commodity} style={{ background:S.card, border:`1px solid ${S.border}`, borderRadius:12, padding:'16px' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
                   <span style={{ fontWeight:600, color:S.text }}>{c.commodity}</span>
                   <SignalBadge signal={c.signal} />
@@ -391,10 +434,7 @@ function CompareTab() {
                   </div>
                   <div>
                     <div style={{ fontSize:10, color:S.muted }}>Trend</div>
-                    <div style={{
-                      fontSize:14, fontWeight:600,
-                      color: c.trend_pct > 0 ? S.red : c.trend_pct < 0 ? S.green : S.amber,
-                    }}>
+                    <div style={{ fontSize:14, fontWeight:600, color: c.trend_pct > 0 ? S.red : c.trend_pct < 0 ? S.green : S.amber }}>
                       {c.trend_pct > 0 ? '+' : ''}{c.trend_pct}%
                     </div>
                   </div>
@@ -403,7 +443,6 @@ function CompareTab() {
             ))}
           </div>
 
-          {/* Trend bar chart */}
           <div style={{ background:S.card, border:`1px solid ${S.border}`, borderRadius:12, padding:'20px 16px' }}>
             <div style={{ fontSize:13, color:S.muted, marginBottom:12 }}>Trend comparison (% change over {data.horizon_days} days)</div>
             <ResponsiveContainer width="100%" height={220}>
@@ -411,13 +450,9 @@ function CompareTab() {
                 <CartesianGrid strokeDasharray="3 3" stroke={S.border} horizontal={false}/>
                 <XAxis type="number" tickFormatter={v => `${v}%`} tick={{fill:S.muted,fontSize:11}}/>
                 <YAxis type="category" dataKey="name" tick={{fill:S.text,fontSize:12}} width={60}/>
-                <Tooltip
-                  contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}}
-                  formatter={v => [`${v}%`,'Trend']}
-                />
+                <Tooltip contentStyle={{background:S.surface,border:`1px solid ${S.border}`,borderRadius:8,fontSize:12}} formatter={v => [`${v}%`,'Trend']} />
                 <ReferenceLine x={0} stroke={S.border} strokeWidth={1.5}/>
-                <Bar dataKey="trend" radius={[0,4,4,0]}
-                  fill={S.blue}
+                <Bar dataKey="trend" radius={[0,4,4,0]} fill={S.blue}
                   label={{ position:'right', fill:S.muted, fontSize:11, formatter: v => `${v > 0 ? '+' : ''}${v}%` }}
                 />
               </BarChart>
@@ -431,7 +466,10 @@ function CompareTab() {
 
 /* ─── App Shell ──────────────────────────────────────────────────────── */
 export default function App() {
-  const [tab, setTab] = useState('forecast')
+  const [user, setUser] = useState(null)
+  const [tab,  setTab]  = useState('forecast')
+
+  if (!user) return <LoginPage onLogin={setUser} />
 
   const tabs = [
     { id:'forecast',   label:'Forecast' },
@@ -441,7 +479,6 @@ export default function App() {
 
   return (
     <div style={{ minHeight:'100vh', background:S.bg, color:S.text, fontFamily:"'DM Sans', sans-serif" }}>
-      {/* Header */}
       <div style={{ background:S.surface, borderBottom:`1px solid ${S.border}`, padding:'0 24px' }}>
         <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', gap:16, height:56 }}>
           <span style={{ fontSize:22 }}>🌾</span>
@@ -449,7 +486,7 @@ export default function App() {
             <div style={{ fontWeight:600, fontSize:16, lineHeight:1 }}>AgriPrice Predictor</div>
             <div style={{ fontSize:11, color:S.muted, marginTop:2 }}>AI/ML price forecasting · HackBlitz S3</div>
           </div>
-          <div style={{ marginLeft:'auto', display:'flex', gap:4 }}>
+          <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
             {tabs.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{
                 background: tab === t.id ? S.blue+'22' : 'transparent',
@@ -459,11 +496,16 @@ export default function App() {
                 fontFamily:"'DM Sans',sans-serif", fontWeight: tab === t.id ? 600 : 400,
               }}>{t.label}</button>
             ))}
+            <div style={{ width:1, height:20, background:S.border, margin:'0 4px' }} />
+            <span style={{ fontSize:12, color:S.muted }}>👤 {user}</span>
+            <button onClick={() => setUser(null)} style={{
+              background:'transparent', color:S.muted, border:`1px solid ${S.border}`,
+              borderRadius:8, padding:'5px 12px', fontSize:12, cursor:'pointer',
+            }}>Logout</button>
           </div>
         </div>
       </div>
 
-      {/* Content */}
       <div style={{ maxWidth:1100, margin:'0 auto', padding:'24px' }}>
         {tab === 'forecast'   && <ForecastTab />}
         {tab === 'historical' && <HistoricalTab />}
